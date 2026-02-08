@@ -1,18 +1,54 @@
 [
-  {
-    "title": "Fireball",
-    "time": "1 Act",
-    "range": "150 feet",
-    "comp": "V, S, M",
-    "dur": "Instant",
-    "desc": "XXXXXXXXXXXXXXXXXXX"
-  },
-  {
-    "title": "Magic Missle",
-    "time": "1 Act",
-    "range": "120 fett",
-    "comp": "V, S",
-    "dur": "Ins",
-    "desc": "XXXXXXXXX...."
-  }
+      {
+        "name": "Bless",
+        "level": 1,
+        "school": "Enchantment",
+        "meta": {
+            "isRitual": false,
+            "sourcebook": "OFFICIAL"
+        },
+        "casting": {
+            "time": "1 action",
+            "range": "30 feet",
+            "isConcentration": true,
+            "duration": "up to 1 minute"
+        },
+        "components": {
+            "verbal": true,
+            "somatic": true,
+            "material": true,
+            "materialDescription": "a sprinkling of holy water"
+        },
+        "classes": {
+            "main": "Paladin",
+            "subclasses": ["ALL"]
+        },
+        "description": "You bless up to three creatures of your choice within range. Whenever a target makes an attack roll or a saving throw before the spell ends, the target can roll a d4 and add the number rolled to the attack roll or saving throw.<br> <b>At Higher Levels</b>: When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature for each slot level above 1st. "
+    },
+    {
+        "name": "Ceremony",
+        "level": 1,
+        "school": "Abjuration",
+        "meta": {
+            "isRitual": true,
+            "sourcebook": "XGE"
+        },
+        "casting": {
+            "time": "1 hour",
+            "range": "Touch",
+            "isConcentration": false,
+            "duration": "Instantaneous"
+        },
+        "components": {
+            "verbal": true,
+            "somatic": true,
+            "material": true,
+            "materialDescription": "25 gp worth of powdered silver, which the spell consumes"
+        },
+        "classes": {
+            "main": "Paladin",
+            "subclasses": ["ALL"]
+        },
+        "description": "You perform a special religious ceremony that is infused with magic. When you cast the spell, choose one of the following rites, the target of which must be within 10 feet of you throughout the casting.<br> <b>Atonement</b>: You touch one willing creature whose alignment has changed, and you make a DC 20 Wisdom (Insight) check. On a successful check, you restore the target to its original alignment.<br> <b>Bless Water</b>: You touch one vial of water and cause it to become holy water.<br> <b>Coming of Age</b>: You touch one humanoid who is a young adult. For the next 24 hours, whenever the target makes an ability check, it can roll a d4 and add the number rolled to the ability check. A creature can benefit from this rite only once.<br> <b>Dedication</b>: You touch one humanoid who wishes to be dedicated to your god's service. For the next 24 hours, whenever the target makes a saving throw, it can roll a d4 and add the number rolled to the save. A creature can benefit from this rite only once.<br> <b>Funeral Rite</b>: You touch one corpse, and for the next 7 days, the target can't become undead by any means short of a <i>wish</i> spell.<br> <b>Wedding</b>: You touch adult humanoids willing to be bonded together in marriage. For the next 7 days, each target gains a +2 bonus to AC while they are within 30 feet of each other. A creature can benefit from this rite again only if widowed."
+    }
 ]
