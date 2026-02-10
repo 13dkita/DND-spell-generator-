@@ -378,6 +378,28 @@
         let frontImageSrc = "";
         let backImageSrc = "";
 
+        // --- FUNKCJA ŁADOWANIA PLIKU JSON ---
+        function loadJSONFile(filename) {
+            fetch(filename)
+                .then(response => response.json())
+                .then(loadedData => {
+                    if (Array.isArray(loadedData)) {
+                        for (let i = 0; i < 9; i++) {
+                            if (loadedData[i]) {
+                                cardsData[i] = { ...createEmptySpell(), ...loadedData[i] };
+                                if(loadedData[i].meta) cardsData[i].meta = { ...createEmptySpell().meta, ...loadedData[i].meta };
+                                if(loadedData[i].casting) cardsData[i].casting = { ...createEmptySpell().casting, ...loadedData[i].casting };
+                                if(loadedData[i].components) cardsData[i].components = { ...createEmptySpell().components, ...loadedData[i].components };
+                                if(loadedData[i].classes) cardsData[i].classes = { ...createEmptySpell().classes, ...loadedData[i].classes };
+                            }
+                        }
+                        cardsData.forEach((_, index) => renderCard(index));
+                        selectCard(0);
+                    }
+                })
+                .catch(err => console.error('Nie udało się wczytać pliku:', err));
+        }
+
         // --- INICJALIZACJA UI ---
         const page = document.getElementById('page');
         const cardTemplate = `
@@ -407,6 +429,9 @@
         }
 
         selectCard(0);
+        
+        // Automatyczne wczytanie example.json przy otwarciu strony
+        loadJSONFile('example.json');
 
         // --- LOGIKA UI ---
         function selectCard(index) {
