@@ -242,31 +242,50 @@
             <summary>Presets Klas</summary>
             <div class="details-content">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 10px;">
-                    <button class="btn-class" onclick="selectClassPreset('wizard')">Wizard</button>
-                    <button class="btn-class" onclick="selectClassPreset('sorcerer')">Sorcerer</button>
-                    <button class="btn-class" onclick="selectClassPreset('paladin')">Paladin</button>
-                    <button class="btn-class" onclick="selectClassPreset('cleric')">Cleric</button>
-                    <button class="btn-class" onclick="selectClassPreset('ranger')">Ranger</button>
-                    <button class="btn-class" onclick="selectClassPreset('druid')">Druid</button>
+                    <button class="btn-class" onclick="selectClassPreset('artificer')">Artificer</button>
                     <button class="btn-class" onclick="selectClassPreset('bard')">Bard</button>
+                    <button class="btn-class" onclick="selectClassPreset('cleric')">Cleric</button>
+                    <button class="btn-class" onclick="selectClassPreset('druid')">Druid</button>
+                    <button class="btn-class" onclick="selectClassPreset('paladin')">Paladin</button>
+                    <button class="btn-class" onclick="selectClassPreset('ranger')">Ranger</button>
+                    <button class="btn-class" onclick="selectClassPreset('sorcerer')">Sorcerer</button>
                     <button class="btn-class" onclick="selectClassPreset('warlock')">Warlock</button>
-                    <button class="btn-class" onclick="selectClassPreset('monk')">Monk</button>
+                    <button class="btn-class" onclick="selectClassPreset('wizard')">Wizard</button>
                 </div>
                 
                 <label>Poziom zaklęcia:</label>
-                <select id="presetLevel" style="width: 100%; padding: 8px; margin-bottom: 10px;">
-                    <option value="">-- Wybierz poziom --</option>
-                    <option value="0">Cantrip</option>
-                    <option value="1">Level 1</option>
-                    <option value="2">Level 2</option>
-                    <option value="3">Level 3</option>
-                    <option value="4">Level 4</option>
-                    <option value="5">Level 5</option>
-                    <option value="6">Level 6</option>
-                    <option value="7">Level 7</option>
-                    <option value="8">Level 8</option>
-                    <option value="9">Level 9</option>
-                </select>
+                <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                    <div style="flex: 1;">
+                        <label style="margin-top: 0; font-size: 0.7rem;">Od poziomu:</label>
+                        <select id="presetLevelFrom" style="width: 100%; padding: 8px;">
+                            <option value="0">Cantrip</option>
+                            <option value="1">Level 1</option>
+                            <option value="2">Level 2</option>
+                            <option value="3">Level 3</option>
+                            <option value="4">Level 4</option>
+                            <option value="5">Level 5</option>
+                            <option value="6">Level 6</option>
+                            <option value="7">Level 7</option>
+                            <option value="8">Level 8</option>
+                            <option value="9">Level 9</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="margin-top: 0; font-size: 0.7rem;">Do poziomu:</label>
+                        <select id="presetLevelTo" style="width: 100%; padding: 8px;">
+                            <option value="0">Cantrip</option>
+                            <option value="1">Level 1</option>
+                            <option value="2">Level 2</option>
+                            <option value="3">Level 3</option>
+                            <option value="4">Level 4</option>
+                            <option value="5">Level 5</option>
+                            <option value="6">Level 6</option>
+                            <option value="7">Level 7</option>
+                            <option value="8">Level 8</option>
+                            <option value="9" selected>Level 9</option>
+                        </select>
+                    </div>
+                </div>
 
                 <label>Podklasa:</label>
                 <select id="presetSubclass" style="width: 100%; padding: 8px; margin-bottom: 10px;">
@@ -491,6 +510,61 @@
                 option.textContent = subclass;
                 subclassSelect.appendChild(option);
             });
+            
+            // Aktualizuj level dropdowns na podstawie najwyższego poziomu dostępnego
+            updateLevelDropdowns();
+        }
+
+        function updateLevelDropdowns() {
+            // Znajdź maksymalny poziom dostępny w tej klasie
+            let maxLevel = 0;
+            allAvailableSpells.forEach(spell => {
+                if (spell.level > maxLevel) {
+                    maxLevel = spell.level;
+                }
+            });
+            
+            const presetLevelFromSelect = document.getElementById('presetLevelFrom');
+            const presetLevelToSelect = document.getElementById('presetLevelTo');
+            
+            // Listę wszystkich możliwych poziomów
+            const levels = [
+                { value: '0', label: 'Cantrip' },
+                { value: '1', label: 'Level 1' },
+                { value: '2', label: 'Level 2' },
+                { value: '3', label: 'Level 3' },
+                { value: '4', label: 'Level 4' },
+                { value: '5', label: 'Level 5' },
+                { value: '6', label: 'Level 6' },
+                { value: '7', label: 'Level 7' },
+                { value: '8', label: 'Level 8' },
+                { value: '9', label: 'Level 9' }
+            ];
+            
+            // Przebuduj dropdown "Od poziomu"
+            presetLevelFromSelect.innerHTML = '';
+            levels.forEach(level => {
+                if (parseInt(level.value) <= maxLevel) {
+                    const option = document.createElement('option');
+                    option.value = level.value;
+                    option.textContent = level.label;
+                    presetLevelFromSelect.appendChild(option);
+                }
+            });
+            
+            // Przebuduj dropdown "Do poziomu"
+            presetLevelToSelect.innerHTML = '';
+            levels.forEach(level => {
+                if (parseInt(level.value) <= maxLevel) {
+                    const option = document.createElement('option');
+                    option.value = level.value;
+                    option.textContent = level.label;
+                    if (parseInt(level.value) === maxLevel) {
+                        option.selected = true;
+                    }
+                    presetLevelToSelect.appendChild(option);
+                }
+            });
         }
 
         function loadClassPreset() {
@@ -499,18 +573,14 @@
                 return;
             }
             
-            const selectedLevel = document.getElementById('presetLevel').value;
+            const selectedLevelFrom = parseInt(document.getElementById('presetLevelFrom').value);
+            const selectedLevelTo = parseInt(document.getElementById('presetLevelTo').value);
             const selectedSubclass = document.getElementById('presetSubclass').value;
-            
-            if (selectedLevel === '') {
-                alert('Wybierz poziom zaklęcia!');
-                return;
-            }
             
             // Filtruj zaklęcia
             const filteredSpells = allAvailableSpells.filter(spell => {
-                // Sprawdź poziom
-                if (spell.level !== parseInt(selectedLevel)) return false;
+                // Sprawdź zakres poziomów
+                if (spell.level < selectedLevelFrom || spell.level > selectedLevelTo) return false;
                 
                 // Sprawdź podklasę
                 if (selectedSubclass) {
