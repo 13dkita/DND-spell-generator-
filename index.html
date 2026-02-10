@@ -539,9 +539,13 @@
         }
 
         function updateLevelDropdowns() {
-            // Znajdź maksymalny poziom dostępny w tej klasie
+            // Znajdź minimalny i maksymalny poziom dostępny w tej klasie
+            let minLevel = 9;
             let maxLevel = 0;
             allAvailableSpells.forEach(spell => {
+                if (spell.level < minLevel) {
+                    minLevel = spell.level;
+                }
                 if (spell.level > maxLevel) {
                     maxLevel = spell.level;
                 }
@@ -567,10 +571,13 @@
             // Przebuduj dropdown "Od poziomu"
             presetLevelFromSelect.innerHTML = '';
             levels.forEach(level => {
-                if (parseInt(level.value) <= maxLevel) {
+                if (parseInt(level.value) >= minLevel && parseInt(level.value) <= maxLevel) {
                     const option = document.createElement('option');
                     option.value = level.value;
                     option.textContent = level.label;
+                    if (parseInt(level.value) === minLevel) {
+                        option.selected = true;
+                    }
                     presetLevelFromSelect.appendChild(option);
                 }
             });
@@ -578,7 +585,7 @@
             // Przebuduj dropdown "Do poziomu"
             presetLevelToSelect.innerHTML = '';
             levels.forEach(level => {
-                if (parseInt(level.value) <= maxLevel) {
+                if (parseInt(level.value) >= minLevel && parseInt(level.value) <= maxLevel) {
                     const option = document.createElement('option');
                     option.value = level.value;
                     option.textContent = level.label;
