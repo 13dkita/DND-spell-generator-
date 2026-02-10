@@ -130,6 +130,13 @@
         }
         .btn-print:hover { background-color: #219150; }
 
+        .btn-nav-page {
+            background-color: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 4px;
+            cursor: pointer; font-weight: bold; transition: 0.2s;
+        }
+        .btn-nav-page:hover { background-color: #2980b9; }
+        .btn-nav-page:active { background-color: #1f618d; }
+
         .file-upload-wrapper {
             background: #f1f1f1; padding: 8px; border: 1px dashed #999; text-align: center; border-radius: 4px; margin-bottom: 10px;
         }
@@ -221,6 +228,8 @@
         @media print {
             .sidebar { display: none; }
             .main-content { padding: 0; background: white; display: block; overflow: visible; height: auto; }
+            #pageIndicator { display: none; }
+            .btn-nav-page { display: none; }
             .page { transform: none; box-shadow: none; margin: 0; width: 100%; height: 100%; }
             body { height: auto; display: block; overflow: visible; }
             .card.selected-card { box-shadow: none; border: 1px solid #ccc; }
@@ -402,12 +411,22 @@
     </div>
 
     <div class="main-content">
-        <div class="page" id="page"></div>
+        <div style="display: flex; flex-direction: column; align-items: center; width: 100%; gap: 15px;">
+            <div id="pageIndicator" style="color: white; font-weight: bold; font-size: 1.1rem;">Strona 1 / 1</div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-nav-page" onclick="prevPage()">◀ Poprzednia</button>
+                <button class="btn-nav-page" onclick="addNewPage()">+ Nowa Strona</button>
+                <button class="btn-nav-page" onclick="nextPage()">Następna ▶</button>
+            </div>
+            <div class="page" id="page"></div>
+        </div>
     </div>
 
     <script>
         // --- DATA STRUCTURE (SEMANTIC) ---
         let currentCardIndex = 0;
+        let currentPage = 0;
+        const cardsPerPage = 9;
         
         // Fabryka pustego zaklęcia (Schema)
         const createEmptySpell = () => ({
@@ -449,7 +468,10 @@
                 .then(response => response.json())
                 .then(loadedData => {
                     if (Array.isArray(loadedData)) {
-                        for (let i = 0; i < 9; i++) {
+                        // Resetuj dane i ustaw nową tablic na podstawie wczytanych danych
+                        cardsData = Array(loadedData.length).fill().map(() => createEmptySpell());
+                        
+                        for (let i = 0; i < loadedData.length; i++) {
                             if (loadedData[i]) {
                                 cardsData[i] = { ...createEmptySpell(), ...loadedData[i] };
                                 if(loadedData[i].meta) cardsData[i].meta = { ...createEmptySpell().meta, ...loadedData[i].meta };
@@ -458,7 +480,8 @@
                                 if(loadedData[i].classes) cardsData[i].classes = { ...createEmptySpell().classes, ...loadedData[i].classes };
                             }
                         }
-                        cardsData.forEach((_, index) => renderCard(index));
+                        currentPage = 0;
+                        renderPage();
                         selectCard(0);
                     }
                 })
@@ -593,21 +616,23 @@
                 return true;
             });
             
-            // Wpisz filtrowane zaklęcia do kart
-            for (let i = 0; i < 9; i++) {
+            // Wpisz filtrowane zaklęcia do kart (z obsługą wielu stron)
+            cardsData = Array(Math.max(filteredSpells.length, 9)).fill().map(() => createEmptySpell());
+            
+            for (let i = 0; i < filteredSpells.length; i++) {
                 if (filteredSpells[i]) {
                     cardsData[i] = { ...createEmptySpell(), ...filteredSpells[i] };
                     if(filteredSpells[i].meta) cardsData[i].meta = { ...createEmptySpell().meta, ...filteredSpells[i].meta };
                     if(filteredSpells[i].casting) cardsData[i].casting = { ...createEmptySpell().casting, ...filteredSpells[i].casting };
                     if(filteredSpells[i].components) cardsData[i].components = { ...createEmptySpell().components, ...filteredSpells[i].components };
                     if(filteredSpells[i].classes) cardsData[i].classes = { ...createEmptySpell().classes, ...filteredSpells[i].classes };
-                } else {
-                    cardsData[i] = createEmptySpell();
                 }
             }
             
-            cardsData.forEach((_, index) => renderCard(index));
+            currentPage = 0;
+            renderPage();
             selectCard(0);
+            updatePageInfo();
             
             alert(`Załadowano ${filteredSpells.length} zaklęć!`);
         }
@@ -631,16 +656,26 @@
             </div>
         `;
 
-        for(let i=0; i<9; i++) {
-            let div = document.createElement('div');
-            div.className = 'card';
-            div.dataset.index = i;
-            div.onclick = function() { selectCard(i); };
-            div.innerHTML = cardTemplate;
-            page.appendChild(div);
+        // Funkcja renderująca stronę
+        function renderPage() {
+            page.innerHTML = '';
+            const startIndex = currentPage * cardsPerPage;
+            const endIndex = Math.min(startIndex + cardsPerPage, cardsData.length);
+            
+            for (let i = startIndex; i < endIndex; i++) {
+                let div = document.createElement('div');
+                div.className = 'card';
+                div.dataset.index = i;
+                div.onclick = function() { selectCard(i); };
+                div.innerHTML = cardTemplate;
+                page.appendChild(div);
+                renderCard(i);
+            }
         }
 
+        renderPage();
         selectCard(0);
+        updatePageInfo();
         
         // Automatyczne wczytanie example.json przy otwarciu strony
         loadJSONFile('example.json');
@@ -648,6 +683,14 @@
         // --- LOGIKA UI ---
         function selectCard(index) {
             currentCardIndex = index;
+            
+            // Zmień stronę jeśli potrzeba
+            const pageNeeded = Math.floor(index / cardsPerPage);
+            if (pageNeeded !== currentPage) {
+                currentPage = pageNeeded;
+                renderPage();
+            }
+            
             document.querySelectorAll('.card').forEach(c => c.classList.remove('selected-card'));
             document.querySelector(`.card[data-index="${index}"]`).classList.add('selected-card');
             
@@ -674,6 +717,45 @@
 
             document.getElementById('inClass').value = data.classes.main || "";
             document.getElementById('inDesc').value = data.description || "";
+        }
+
+        // --- FUNKCJE PAGINACJI ---
+        function updatePageInfo() {
+            const totalPages = Math.ceil(cardsData.length / cardsPerPage);
+            const pageIndicator = document.getElementById('pageIndicator');
+            if (pageIndicator) {
+                pageIndicator.innerHTML = `Strona ${currentPage + 1} / ${totalPages}`;
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(cardsData.length / cardsPerPage);
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                renderPage();
+                updatePageInfo();
+                selectCard(currentPage * cardsPerPage);
+            }
+        }
+
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                renderPage();
+                updatePageInfo();
+                selectCard(currentPage * cardsPerPage);
+            }
+        }
+
+        function addNewPage() {
+            // Dodaj 9 nowych pustych kart
+            const newCards = Array(cardsPerPage).fill().map(() => createEmptySpell());
+            cardsData = cardsData.concat(newCards);
+            currentPage = cardsData.length - cardsPerPage;
+            renderPage();
+            updatePageInfo();
+            selectCard(currentPage * cardsPerPage);
+            alert('Dodano nową stronę!');
         }
 
         function updateCurrentCard() {
