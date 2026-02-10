@@ -116,6 +116,13 @@
         .btn-json { background-color: #8e44ad; color: white; margin-bottom: 5px; }
         .btn-json:hover { background-color: #732d91; }
         
+        .btn-class {
+            background-color: #3498db; color: white; padding: 8px; border: none; border-radius: 4px;
+            cursor: pointer; font-weight: bold; font-size: 0.8rem; transition: 0.2s;
+        }
+        .btn-class:hover { background-color: #2980b9; }
+        .btn-class.active { background-color: #27ae60; }
+        
         .btn-print { 
             background-color: #27ae60; color: white; padding: 15px; font-size: 1.1rem; 
             margin-top: auto;
@@ -230,6 +237,45 @@
         <div class="edit-status" id="statusHeader">
             EDYTUJESZ KARTĘ #1
         </div>
+
+        <details open>
+            <summary>Presets Klas</summary>
+            <div class="details-content">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 10px;">
+                    <button class="btn-class" onclick="selectClassPreset('wizard')">Wizard</button>
+                    <button class="btn-class" onclick="selectClassPreset('sorcerer')">Sorcerer</button>
+                    <button class="btn-class" onclick="selectClassPreset('paladin')">Paladin</button>
+                    <button class="btn-class" onclick="selectClassPreset('cleric')">Cleric</button>
+                    <button class="btn-class" onclick="selectClassPreset('ranger')">Ranger</button>
+                    <button class="btn-class" onclick="selectClassPreset('druid')">Druid</button>
+                    <button class="btn-class" onclick="selectClassPreset('bard')">Bard</button>
+                    <button class="btn-class" onclick="selectClassPreset('warlock')">Warlock</button>
+                    <button class="btn-class" onclick="selectClassPreset('monk')">Monk</button>
+                </div>
+                
+                <label>Poziom zaklęcia:</label>
+                <select id="presetLevel" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                    <option value="">-- Wybierz poziom --</option>
+                    <option value="0">Cantrip</option>
+                    <option value="1">Level 1</option>
+                    <option value="2">Level 2</option>
+                    <option value="3">Level 3</option>
+                    <option value="4">Level 4</option>
+                    <option value="5">Level 5</option>
+                    <option value="6">Level 6</option>
+                    <option value="7">Level 7</option>
+                    <option value="8">Level 8</option>
+                    <option value="9">Level 9</option>
+                </select>
+
+                <label>Podklasa:</label>
+                <select id="presetSubclass" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                    <option value="">-- Wszystkie podklasy --</option>
+                </select>
+
+                <button class="btn-action btn-json" onclick="loadClassPreset()">Załaduj Zaklęcia</button>
+            </div>
+        </details>
 
         <div style="margin-top: 15px;">
             <label>Podstawowe:</label>
@@ -398,6 +444,102 @@
                     }
                 })
                 .catch(err => console.error('Nie udało się wczytać pliku:', err));
+        }
+
+        // --- KLASY PRESET ---
+        let selectedClass = null;
+        let allAvailableSpells = [];
+
+        function selectClassPreset(className) {
+            selectedClass = className;
+            
+            // Aktualizacja wybranych przycisków
+            document.querySelectorAll('.btn-class').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Załaduj spells dla wybranej klasy
+            const filename = className.toLowerCase() + '.json';
+            fetch(filename)
+                .then(response => response.json())
+                .then(data => {
+                    allAvailableSpells = data;
+                    updateSubclassDropdown();
+                })
+                .catch(err => console.error('Nie udało się wczytać klasy:', err));
+        }
+
+        function updateSubclassDropdown() {
+            const subclassSelect = document.getElementById('presetSubclass');
+            const subclasses = new Set();
+            
+            // Zbierz wszystkie podklasy dostępne dla wybranej klasy
+            allAvailableSpells.forEach(spell => {
+                if (spell.classes && spell.classes.subclasses) {
+                    spell.classes.subclasses.forEach(sub => {
+                        if (sub !== 'ALL') {
+                            subclasses.add(sub);
+                        }
+                    });
+                }
+            });
+            
+            // Aktualizuj dropdown
+            subclassSelect.innerHTML = '<option value="">-- Wszystkie podklasy --</option>';
+            subclasses.forEach(subclass => {
+                const option = document.createElement('option');
+                option.value = subclass;
+                option.textContent = subclass;
+                subclassSelect.appendChild(option);
+            });
+        }
+
+        function loadClassPreset() {
+            if (!selectedClass) {
+                alert('Wybierz klasę!');
+                return;
+            }
+            
+            const selectedLevel = document.getElementById('presetLevel').value;
+            const selectedSubclass = document.getElementById('presetSubclass').value;
+            
+            if (selectedLevel === '') {
+                alert('Wybierz poziom zaklęcia!');
+                return;
+            }
+            
+            // Filtruj zaklęcia
+            const filteredSpells = allAvailableSpells.filter(spell => {
+                // Sprawdź poziom
+                if (spell.level !== parseInt(selectedLevel)) return false;
+                
+                // Sprawdź podklasę
+                if (selectedSubclass) {
+                    // Jeśli wybrano specyficzną podklasę
+                    const hasSubclass = spell.classes && spell.classes.subclasses && 
+                        (spell.classes.subclasses.includes('ALL') || spell.classes.subclasses.includes(selectedSubclass));
+                    if (!hasSubclass) return false;
+                }
+                
+                return true;
+            });
+            
+            // Wpisz filtrowane zaklęcia do kart
+            for (let i = 0; i < 9; i++) {
+                if (filteredSpells[i]) {
+                    cardsData[i] = { ...createEmptySpell(), ...filteredSpells[i] };
+                    if(filteredSpells[i].meta) cardsData[i].meta = { ...createEmptySpell().meta, ...filteredSpells[i].meta };
+                    if(filteredSpells[i].casting) cardsData[i].casting = { ...createEmptySpell().casting, ...filteredSpells[i].casting };
+                    if(filteredSpells[i].components) cardsData[i].components = { ...createEmptySpell().components, ...filteredSpells[i].components };
+                    if(filteredSpells[i].classes) cardsData[i].classes = { ...createEmptySpell().classes, ...filteredSpells[i].classes };
+                } else {
+                    cardsData[i] = createEmptySpell();
+                }
+            }
+            
+            cardsData.forEach((_, index) => renderCard(index));
+            selectCard(0);
+            
+            alert(`Załadowano ${filteredSpells.length} zaklęć!`);
         }
 
         // --- INICJALIZACJA UI ---
